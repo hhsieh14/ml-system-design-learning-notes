@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: "Please cite this repository if you use its original diagrams, study framework, or decision structure."
+title: "Machine Learning System Design Study Handbook"
+type: dataset
+authors:
+  - family-names: "Hsieh"
+    given-names: "Hsiang-Yu"
+    alias: "Andy"
+version: 1.0.0
+date-released: 2026-07-27
+abstract: "A visual and alternatives-driven ML system design study handbook with original diagrams, trade-off analysis, and decision prompts."
+keywords:
+  - machine learning system design
+  - system design interview
+  - ranking
+  - recommendation systems
+  - ad click prediction
+  - temporal graph learning
+  - content moderation
+references:
+  - type: book
+    authors:
+      - family-names: "Aminian"
+        given-names: "Ali"
+      - family-names: "Xu"
+        given-names: "Alex"
+    title: "Machine Learning System Design Interview"
+    publisher:
+      name: "ByteByteGo"
+    year: 2023
+    isbn: "9781736049129"

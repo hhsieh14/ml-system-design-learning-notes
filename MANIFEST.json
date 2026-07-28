@@ -1,0 +1,467 @@
+{
+  "version": "1.0.1",
+  "files": [
+    {
+      "path": ".gitattributes",
+      "bytes": 26,
+      "sha256": "9618185d97a7b73972851bc179ac276080c298f79adbc1847951e647f4254c27"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 46,
+      "sha256": "2053a018481bc58c6e8389c426a5b91fac76c862698146c5677bfaa12e8d8f9b"
+    },
+    {
+      "path": "ACKNOWLEDGMENTS.md",
+      "bytes": 567,
+      "sha256": "31e5febcfacb3c796f3c08fe32de6a37b7690b23fae06543b231ece22a902e0b"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "bytes": 436,
+      "sha256": "52c2807e0fd7f19d4d5cc3d953142a822196be75b597988dceedba8502be102e"
+    },
+    {
+      "path": "CITATION.cff",
+      "bytes": 943,
+      "sha256": "f12fa944d4c9008a47ad1a2175fc38a4aa128ed19ed7ba669d68454ff3ec52b5"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "bytes": 395,
+      "sha256": "c4e44dcba9c30899d307754833f4ef1eb75d5fbe0121ba64966e0421481d1a95"
+    },
+    {
+      "path": "DISCLAIMER.md",
+      "bytes": 570,
+      "sha256": "53af53de4f83d2e4a36c4ab462c5003f150d4caa7953ad0d272c4f540a597d28"
+    },
+    {
+      "path": "LICENSE.md",
+      "bytes": 482,
+      "sha256": "616a998fde022a0ceb9cdedd702d46378c2c17a88028126b7fb160f613b32d64"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2748,
+      "sha256": "0cb88f44a39d34fd0523d452fb6f11e5cbde69a842f1d02ce01a5e6f62a37cb1"
+    },
+    {
+      "path": "REFERENCES.md",
+      "bytes": 430,
+      "sha256": "f7aa62f33509c67350c58f321063808ea493a7cc05277d8754006a3bd9aa7c22"
+    },
+    {
+      "path": "RELEASE_NOTES.md",
+      "bytes": 456,
+      "sha256": "dd54a49d979184ff518972da079dcf6f2f16c7412c476e2f4a70b4f75f3c3a47"
+    },
+    {
+      "path": "assets/minimum_sufficient_design.png",
+      "bytes": 57833,
+      "sha256": "e16c3e28c308e78c83bb120517ce9b019a57807de30e7288d4fc6156893c9498"
+    },
+    {
+      "path": "chapters/00_framework/README.md",
+      "bytes": 726,
+      "sha256": "524cfadfd6325aae6f627ff17c47aae96e8c00fdbd6530f423946549ef77ab9e"
+    },
+    {
+      "path": "chapters/00_framework/chapter_00_ml_system_design_framework.md",
+      "bytes": 3069,
+      "sha256": "b04ff3686df2d7cfcf2ba32ce2a5546dfef23b8e5e00714f5c27aa9472778ddd"
+    },
+    {
+      "path": "chapters/00_framework/chapter_00_ml_system_design_framework.pdf",
+      "bytes": 571654,
+      "sha256": "2ac592b289514d6a55d137c6d512b98d2fbffbf07de07e3668acc8f103e437df"
+    },
+    {
+      "path": "chapters/00_framework/decision_summary.md",
+      "bytes": 1066,
+      "sha256": "a8649447f4f0cc405d1b753ee59d3ec2e3159e1d09819688768728087e3f15b9"
+    },
+    {
+      "path": "chapters/00_framework/diagrams/01_minimum_sufficient_design.png",
+      "bytes": 57833,
+      "sha256": "e16c3e28c308e78c83bb120517ce9b019a57807de30e7288d4fc6156893c9498"
+    },
+    {
+      "path": "chapters/00_framework/diagrams/02_design_order.png",
+      "bytes": 55389,
+      "sha256": "16f13fd935595591a62ad532e02008f9c7929bb7a424c124ed63528393752083"
+    },
+    {
+      "path": "chapters/00_framework/diagrams/03_alternatives_lens.png",
+      "bytes": 79653,
+      "sha256": "87f9dc1b3e78b7a6e05f7ae8f34a3c10ac6693f6514c1195b87b68fd42c9d949"
+    },
+    {
+      "path": "chapters/00_framework/diagrams/04_compare_alternatives.png",
+      "bytes": 37660,
+      "sha256": "267abb72c641421853f7db301fcdfe227a3d973f56f2701e5d7a4da946160e7b"
+    },
+    {
+      "path": "chapters/00_framework/diagrams/05_model_service_separation.png",
+      "bytes": 56970,
+      "sha256": "dbbb546c8a0c9ce1068f70a00d495553cf154b87e322a56bd2a8bf3be70e29bf"
+    },
+    {
+      "path": "chapters/00_framework/diagrams/06_staged_production_design.png",
+      "bytes": 51771,
+      "sha256": "9765eedf29199577f5265f9f1d681d480d0be293b95bfd86b7367f12408a8fa3"
+    },
+    {
+      "path": "chapters/00_framework/diagrams/07_serving_deployment.png",
+      "bytes": 54595,
+      "sha256": "e0682c820511afd53c06ebbbfd43770ed3c3c66062b1ce89ae38d6d0d8e63a4d"
+    },
+    {
+      "path": "chapters/00_framework/quick_reference.md",
+      "bytes": 1190,
+      "sha256": "ba6d089c90cbfbdb444637960ad385b1fa11493fe5bf40e99534738128c711b0"
+    },
+    {
+      "path": "chapters/00_framework/reusable_case_template.md",
+      "bytes": 5624,
+      "sha256": "63540a80698972f4ac523e509fa8a21d14108857c3adbfbc9a77928ad0b416a2"
+    },
+    {
+      "path": "chapters/01_ranking_model/README.md",
+      "bytes": 829,
+      "sha256": "9aeddf1d8877551f341f82b012e26c4721405f37a14a74ea582ddb1cdfb355f6"
+    },
+    {
+      "path": "chapters/01_ranking_model/chapter_01_design_a_ranking_model.md",
+      "bytes": 9293,
+      "sha256": "8eec3e8310864e098ac76a96ccc6a348caaabc25a0e82ad37e3605b5212378b7"
+    },
+    {
+      "path": "chapters/01_ranking_model/chapter_01_design_a_ranking_model.pdf",
+      "bytes": 192424,
+      "sha256": "b4f5f7963f4f28c699561533bdcb4d2982b1899e69356fc661f7101f4ece286d"
+    },
+    {
+      "path": "chapters/01_ranking_model/decision_summary.md",
+      "bytes": 1272,
+      "sha256": "f8c46669a7832416b89935a078bdaafd0ec8688a1d011a48e41d763e07f53586"
+    },
+    {
+      "path": "chapters/01_ranking_model/diagrams/01_design_map.png",
+      "bytes": 71880,
+      "sha256": "9a5de3e22ea13aff0e382663512ad9fe4b5124b5bd30a8c786359f7842cf24fe"
+    },
+    {
+      "path": "chapters/01_ranking_model/diagrams/02_product_objective_labels.png",
+      "bytes": 155493,
+      "sha256": "a50be3cb90a0a4e5948f8cd442c72394e06e109bb0a2f8a53d329f0ba5de9368"
+    },
+    {
+      "path": "chapters/01_ranking_model/diagrams/03_metrics_by_stage.png",
+      "bytes": 104464,
+      "sha256": "2e9dafdcf0c832ba45f39cb3200dc3422c594f452d45a77af25e0dad9daba4d1"
+    },
+    {
+      "path": "chapters/01_ranking_model/diagrams/04_model_alternatives.png",
+      "bytes": 110068,
+      "sha256": "32364575bfcdeea772f5bf0f657603581f4991a1985093e9a3a9cb907439ac2e"
+    },
+    {
+      "path": "chapters/01_ranking_model/diagrams/05_multitask_architecture.png",
+      "bytes": 94066,
+      "sha256": "42af1dac77e66ae102ad70048b93fe46de88a61fef6cac9708c6fe0446bf0adb"
+    },
+    {
+      "path": "chapters/01_ranking_model/diagrams/06_candidate_generation_serving.png",
+      "bytes": 86833,
+      "sha256": "a63f543facbd57cc4dad080bd0dc1c34ecf7375e2d3a9414458e370ed3981e30"
+    },
+    {
+      "path": "chapters/01_ranking_model/diagrams/07_indexing_service.png",
+      "bytes": 136500,
+      "sha256": "ea60f6d4b69f393fc80109d2210dcf3b57cc1dd122de23cb118f94b6fc9645d3"
+    },
+    {
+      "path": "chapters/01_ranking_model/diagrams/08_validation_monitoring.png",
+      "bytes": 98879,
+      "sha256": "b4ada557ed137cb8da2991de2be8cd5766d29967a82414be98a4e9fba02f3013"
+    },
+    {
+      "path": "chapters/01_ranking_model/diagrams/09_reference_architecture.png",
+      "bytes": 170568,
+      "sha256": "2406955cea45603f624b6d52f68e769612d840e3ea5becc2db96458422ff43c8"
+    },
+    {
+      "path": "chapters/02_ad_click_prediction/README.md",
+      "bytes": 572,
+      "sha256": "be507fa707715d41d9f1f74dcc1cb717d5cfec19bf5c9f658bed9348fa487c24"
+    },
+    {
+      "path": "chapters/02_ad_click_prediction/chapter_02_ad_click_prediction.md",
+      "bytes": 5208,
+      "sha256": "3dfa5a2305df8fd9d23545118a38e239c8d69487fab885ffae1c934ea5ee5786"
+    },
+    {
+      "path": "chapters/02_ad_click_prediction/chapter_02_ad_click_prediction.pdf",
+      "bytes": 1282517,
+      "sha256": "d4369c28aec6e932aeb0b51130ef9a0889fa71c6f1fa06d3ce2831b12a682167"
+    },
+    {
+      "path": "chapters/02_ad_click_prediction/decision_summary.md",
+      "bytes": 889,
+      "sha256": "12c447cd4567f57879c6a6df337b59d4e176bb0c6d25b23fd29d034df393ecca"
+    },
+    {
+      "path": "chapters/02_ad_click_prediction/diagrams/01_design_map.png",
+      "bytes": 113764,
+      "sha256": "efda23ffcc3eea813f26ca4029dda4e71523807958ef923feb8f0b307dad5346"
+    },
+    {
+      "path": "chapters/02_ad_click_prediction/diagrams/02_repeated_exposure.png",
+      "bytes": 109004,
+      "sha256": "7611a32764e87ba10dc770dbcb895b2513027600e0ad9ac9cf8bcb4f9014e075"
+    },
+    {
+      "path": "chapters/02_ad_click_prediction/diagrams/03_data_and_labels.png",
+      "bytes": 130651,
+      "sha256": "c493b2daa96ace368ea88a9ac7ab0d4d156361e909fd9ab5624c7cf597cdd456"
+    },
+    {
+      "path": "chapters/02_ad_click_prediction/diagrams/04_metrics.png",
+      "bytes": 177109,
+      "sha256": "947809c9b21e0c33f1cca1a159a5cc43513451b45ca556266da4e43e0a5199da"
+    },
+    {
+      "path": "chapters/02_ad_click_prediction/diagrams/05_model_progression.png",
+      "bytes": 116856,
+      "sha256": "b67dfde5cb45994debecd380ef70d2a063f5a82e8efe672a6fd4238f81e27b43"
+    },
+    {
+      "path": "chapters/02_ad_click_prediction/diagrams/06_interaction_models.png",
+      "bytes": 121363,
+      "sha256": "c1a3143e5687d2b935bb177c43674d86aeda0a86c7d17d55dc7e0135f7bc728d"
+    },
+    {
+      "path": "chapters/02_ad_click_prediction/diagrams/07_two_tower_placement.png",
+      "bytes": 113162,
+      "sha256": "f8cc74e138cbdfb8607e8ec7478f1b0435622336f5bbaf6e24d72823a7cbbf13"
+    },
+    {
+      "path": "chapters/02_ad_click_prediction/diagrams/08_candidate_generation.png",
+      "bytes": 131509,
+      "sha256": "f1d03ed23a159dfb10680195a31c6224b87986c5cd80f3901a185b2fd82afbf7"
+    },
+    {
+      "path": "chapters/02_ad_click_prediction/diagrams/09_continual_learning.png",
+      "bytes": 116527,
+      "sha256": "7679b7f9db4d0d70bd8d4d0f739458b20a1b83493ce2a02fbd1a1c57b0f9f9f2"
+    },
+    {
+      "path": "chapters/02_ad_click_prediction/diagrams/10_validation_calibration.png",
+      "bytes": 103702,
+      "sha256": "9bb8a4301475963d56de9717f88bbfebc769a7b1c55733cdd3c22e5349ad392d"
+    },
+    {
+      "path": "chapters/02_ad_click_prediction/diagrams/11_leakage.png",
+      "bytes": 78488,
+      "sha256": "f4aedde656a84530203e52e871e06559dff92831536d59127ca7ebd1eed40e23"
+    },
+    {
+      "path": "chapters/02_ad_click_prediction/diagrams/12_reference_architecture.png",
+      "bytes": 134159,
+      "sha256": "ef957d10360d1cf619a793364c1ec478f41c5d6b210ff9a476309fc0695269b6"
+    },
+    {
+      "path": "chapters/03_people_you_may_know/README.md",
+      "bytes": 602,
+      "sha256": "4b47ef96d454fec395da36d17a0ce70d3504e31f92c8135d5e8a0b79125a2e83"
+    },
+    {
+      "path": "chapters/03_people_you_may_know/chapter_03_people_you_may_know.md",
+      "bytes": 4941,
+      "sha256": "41e3e40a4c3a55fd01fbb2b847ac43364e9827ed88ceab77d19c0f6ebdc3dbd1"
+    },
+    {
+      "path": "chapters/03_people_you_may_know/chapter_03_people_you_may_know.pdf",
+      "bytes": 1414375,
+      "sha256": "cf41e21785957048122a7828d609b3f056aa2ac04414c117d1ba430ce3ac0579"
+    },
+    {
+      "path": "chapters/03_people_you_may_know/decision_summary.md",
+      "bytes": 1141,
+      "sha256": "735e991ee0cb162ca049e46d6d70a85bf4d5d4f9de42df51dcf1eae665a8be83"
+    },
+    {
+      "path": "chapters/03_people_you_may_know/diagrams/01_design_map.png",
+      "bytes": 127059,
+      "sha256": "590a321c450a8781e86eb80c4010d93af5c1c3be68ef3100a48b07c646219ce5"
+    },
+    {
+      "path": "chapters/03_people_you_may_know/diagrams/02_scale_constraints.png",
+      "bytes": 115511,
+      "sha256": "a7a408ab1cb4e8d8c1305801495da30790a60867fe9105c1c95c2ed44f8fef13"
+    },
+    {
+      "path": "chapters/03_people_you_may_know/diagrams/03_metrics.png",
+      "bytes": 167552,
+      "sha256": "f8b3569971335e70e4a79dfee7e8a620bb9279db7c11419c5afb89fdf4a09f7b"
+    },
+    {
+      "path": "chapters/03_people_you_may_know/diagrams/04_model_alternatives.png",
+      "bytes": 87731,
+      "sha256": "17e602f04145e26524f54b38c48f58ac05260bd8ba5a6e1b0c34f084d632d50c"
+    },
+    {
+      "path": "chapters/03_people_you_may_know/diagrams/05_features_affinity.png",
+      "bytes": 131796,
+      "sha256": "f05b36ccb945c61e2b32d82134ecf3e6c1b45c96478f1723350bef2a25b003d1"
+    },
+    {
+      "path": "chapters/03_people_you_may_know/diagrams/06_temporal_gnn.png",
+      "bytes": 128270,
+      "sha256": "1ea5a4bcb205ec87ee0d031689fdd3333b95054d7b898c9fd5359525243c1ef0"
+    },
+    {
+      "path": "chapters/03_people_you_may_know/diagrams/07_candidate_generation.png",
+      "bytes": 140220,
+      "sha256": "c5dae7895f0ccfe7422cca88c70f497a8057380a60113290cddeed1e68f465b0"
+    },
+    {
+      "path": "chapters/03_people_you_may_know/diagrams/08_pair_scoring.png",
+      "bytes": 131661,
+      "sha256": "dbbf055b8fd1dec4b88bcb00b35a73304bb7cd66c81201c990564a01b6a81731"
+    },
+    {
+      "path": "chapters/03_people_you_may_know/diagrams/09_serving_lazy_refresh.png",
+      "bytes": 117115,
+      "sha256": "d063588be977dd8d718a4ab01e705c16a1e04dd1a320dd4f2660b885a51b401d"
+    },
+    {
+      "path": "chapters/03_people_you_may_know/diagrams/10_missing_and_exposure.png",
+      "bytes": 133882,
+      "sha256": "aeee9c27b0ccf077ea74e54e5d2c9db0961a4ada0222685383500af0e2e2518e"
+    },
+    {
+      "path": "chapters/03_people_you_may_know/diagrams/11_negatives_evaluation.png",
+      "bytes": 130325,
+      "sha256": "98dc55a2719e316826bdca516b7e98b7ff1984a84d401a0490d24634801e017e"
+    },
+    {
+      "path": "chapters/03_people_you_may_know/diagrams/12_reference_architecture.png",
+      "bytes": 155630,
+      "sha256": "6973985362714f29cf2223922014a19ec85cc877c7434363ac5345c6809c4a94"
+    },
+    {
+      "path": "chapters/04_harmful_content_detection/README.md",
+      "bytes": 328,
+      "sha256": "f7963b4e0c529f308a63bd71fa4ed038a41f50c76f946f8cbb70657a35e1c8fa"
+    },
+    {
+      "path": "chapters/04_harmful_content_detection/chapter_04_harmful_content_detection.md",
+      "bytes": 27295,
+      "sha256": "68093b1dde54c6c5e57507262bb7166bc62df49b4c8935b3678268f5c2de19f3"
+    },
+    {
+      "path": "chapters/04_harmful_content_detection/chapter_04_harmful_content_detection.pdf",
+      "bytes": 745019,
+      "sha256": "aaa20d22ba22f4531887754c363a6be6ae04dd2da82d0bda741cba22c7ac3a6a"
+    },
+    {
+      "path": "chapters/04_harmful_content_detection/decision_summary.md",
+      "bytes": 819,
+      "sha256": "8220bfe180782423463a17d41440473571c66873bb2079090d39c72548ad29c6"
+    },
+    {
+      "path": "chapters/04_harmful_content_detection/diagrams/01_design_map.png",
+      "bytes": 61315,
+      "sha256": "81c56a5f49669bd0a8459ff66a3453b46075949b65d610c2e95611ba6f11a9e1"
+    },
+    {
+      "path": "chapters/04_harmful_content_detection/diagrams/02_product_flow.png",
+      "bytes": 67009,
+      "sha256": "094e9395422b54836cdff679aa6de937eb2dd5cd9396921ad01fcd56941d9683"
+    },
+    {
+      "path": "chapters/04_harmful_content_detection/diagrams/03_label_pipeline.png",
+      "bytes": 68424,
+      "sha256": "49da45aabf812cc367bc619df47211835e8bf054ad2d2e7c0d5880aeafb7e7ae"
+    },
+    {
+      "path": "chapters/04_harmful_content_detection/diagrams/04_fusion_comparison.png",
+      "bytes": 60413,
+      "sha256": "edb15065f28000f8e7dd7120c71336446a2268c9902ee719dd970cd05700f214"
+    },
+    {
+      "path": "chapters/04_harmful_content_detection/diagrams/05_model_alternatives.png",
+      "bytes": 91653,
+      "sha256": "23309fb1932d1dee5412c7444820ae76ced15f3ef108588abf5d85ae0db79f74"
+    },
+    {
+      "path": "chapters/04_harmful_content_detection/diagrams/06_reference_architecture.png",
+      "bytes": 69181,
+      "sha256": "fb01298ff3f23e35ebc1f652c2d70b97a9e224aea9d76ac845c126255c11b224"
+    },
+    {
+      "path": "chapters/04_harmful_content_detection/diagrams/07_training_flow.png",
+      "bytes": 78062,
+      "sha256": "8782ffffb2aac2bfb29c0c2a229cadd1f1b7ce01311ce54dc77244b0bd0f9f20"
+    },
+    {
+      "path": "chapters/04_harmful_content_detection/diagrams/08_serving_shadow.png",
+      "bytes": 76262,
+      "sha256": "df0984b9e38d4ce3ef6eb1cee21437a54a47d792ea2e30d1c0c99a36063c2165"
+    },
+    {
+      "path": "docs/QA_REPORT.md",
+      "bytes": 885,
+      "sha256": "ce00014c10c89c9ed439265ead381730dcc23de0b011d4ec8227a63a52bebd2c"
+    },
+    {
+      "path": "docs/VISUAL_STYLE.md",
+      "bytes": 500,
+      "sha256": "1041ff7e53f26333ff6fd2f34cc4aafd01657d240e86d0dfeffd290c5999024e"
+    },
+    {
+      "path": "handbook/ML_System_Design_Study_Handbook.pdf",
+      "bytes": 3567670,
+      "sha256": "765c465267265019b4f0d887b9609c93cc4f99b0df9d19253081bb15c0c8137a"
+    },
+    {
+      "path": "handbook/README.md",
+      "bytes": 292,
+      "sha256": "a2f0e7a0518f9a5025f2a3ccfe7234626bed34e46de4f39e853c4113b75b3ecf"
+    },
+    {
+      "path": "linkedin/00_framework_post.md",
+      "bytes": 1179,
+      "sha256": "c58056fadc3a01809f5df917725daa62386beca36b53d2668edeac9b6038f9dd"
+    },
+    {
+      "path": "linkedin/01_ranking_model_post.md",
+      "bytes": 1292,
+      "sha256": "2e690d70bd0dacb407dc42daf8f2242a08e1e64f0d78e7f5c03c3022b12cdbb6"
+    },
+    {
+      "path": "linkedin/02_ad_click_prediction_post.md",
+      "bytes": 1257,
+      "sha256": "9e2f306f004bd76e4be157833f6e5ec9666bb117d542ff3c391b8d1fe736c856"
+    },
+    {
+      "path": "linkedin/03_people_you_may_know_post.md",
+      "bytes": 1363,
+      "sha256": "f75667051cdc7ccf4957209ceb40fc8e41b874f16436f11489b9fa19bbeb9282"
+    },
+    {
+      "path": "linkedin/04_harmful_content_detection_post.md",
+      "bytes": 1085,
+      "sha256": "fb6eb554fe2ee843a0890bf715b1aeb6b75b07188afb6ba3380386181271999b"
+    },
+    {
+      "path": "linkedin/launch_post.md",
+      "bytes": 999,
+      "sha256": "8a05b9e5ef91207db9d7eff39caf82a231d11c3c90bb5acb388963531e4a8461"
+    }
+  ],
+  "markdown_missing_links": [],
+  "forbidden_files": []
+}

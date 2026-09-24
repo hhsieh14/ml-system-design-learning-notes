@@ -1,14 +1,9 @@
-# Chapter 2 - Ad Click Prediction
+# Chapter 2: Ad Click Prediction
 
-Publication-ready case-study package.
+Calibrated click probabilities for an eCPM auction: LR → DCN/DeepFM, normalized entropy, downsampling correction, frequency policy, and leakage-safe training.
 
-## Files
+- [Read the chapter](chapter_02_ad_click_prediction.md)
+- [PDF version](chapter_02_ad_click_prediction.pdf)
+- [Decision summary](decision_summary.md): the design choices and the measured result that would change each one
 
-- `chapter_02_ad_click_prediction.pdf` - designed reading version
-- `chapter_02_ad_click_prediction.md` - GitHub version
-- `decision_summary.md` - concise design record
-- `diagrams/` - original visual assets
-
-## Primary reference
-
-This chapter began as personal study notes based largely on *Machine Learning System Design Interview* by Ali Aminian and Alex Xu. It uses original wording and original diagrams and is not a substitute for the book.
+Based on my study of *Machine Learning System Design Interview* (Aminian & Xu, 2023). The wording and diagrams are my own; see the [main README](../../README.md) for attribution.

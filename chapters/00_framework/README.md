@@ -1,18 +1,11 @@
-# Chapter 0 - How to Approach an ML System Design Case
+# Chapter 0: How I Approach an ML System Design Case
 
-A publication-ready visual chapter for the Machine Learning System Design Study Handbook.
+The reusable procedure behind every case: minimum sufficient design, the design order, three lenses on alternatives, measurable switch conditions, and the rollout sequence.
 
-## Files
+- [Read the chapter](chapter_00_ml_system_design_framework.md)
+- [PDF version](chapter_00_ml_system_design_framework.pdf)
+- [Decision summary](decision_summary.md): the design choices and the measured result that would change each one
+- [`reusable_case_template.md`](reusable_case_template.md): a blank worksheet for practicing a new case
+- [`quick_reference.md`](quick_reference.md): the one-page version
 
-- `chapter_00_ml_system_design_framework.pdf`
-- `chapter_00_ml_system_design_framework.md`
-- `decision_summary.md`
-- `reusable_case_template.md`
-- `quick_reference.md`
-- `diagrams/`
-
-## Primary reference
-
-This chapter began as personal study notes based largely on *Machine Learning System Design Interview* by Ali Aminian and Alex Xu. The restructuring, clarifications, comparison framework, diagrams, and interpretations are the author's own.
-
-This package does not include handwritten source scans and is not a substitute for the original book.
+Based on my study of *Machine Learning System Design Interview* (Aminian & Xu, 2023). The wording and diagrams are my own; see the [main README](../../README.md) for attribution.

@@ -1,16 +1,9 @@
-# Chapter 1 - Designing a Large-Scale Social Feed Ranking System
+# Chapter 1: Social Feed Ranking
 
-A publication-ready visual chapter for the Machine Learning System Design Study Handbook.
+Multi-source retrieval, a shared-bottom multi-task ranker, a calibrated utility score, and a staged rollout for a feed serving ~500M daily users within 200 ms.
 
-## Files
+- [Read the chapter](chapter_01_design_a_ranking_model.md)
+- [PDF version](chapter_01_design_a_ranking_model.pdf)
+- [Decision summary](decision_summary.md): the design choices and the measured result that would change each one
 
-- `chapter_01_design_a_ranking_model.pdf`
-- `chapter_01_design_a_ranking_model.md`
-- `decision_summary.md`
-- `diagrams/`
-
-## Primary reference
-
-This chapter began as personal study notes based largely on *Machine Learning System Design Interview* by Ali Aminian and Alex Xu. The restructuring, clarifications, trade-off discussions, diagrams, and interpretations are the author's own.
-
-The public package excludes handwritten source scans and is not a substitute for the original book.
+Based on my study of *Machine Learning System Design Interview* (Aminian & Xu, 2023). The wording and diagrams are my own; see the [main README](../../README.md) for attribution.

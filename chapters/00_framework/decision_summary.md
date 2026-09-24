@@ -1,25 +1,15 @@
 # Chapter 0 Decision Summary
 
-## Core principle
+**Principle:** use the minimum sufficient design. Add a component only when a requirement needs it, a measured limitation justifies it, or production constraints force it.
 
-Use the minimum sufficient design that fulfills the current requirements.
+**Design order:** scope → requirements (with back-of-envelope numbers) → service decision → metrics → data and labels → baseline → richer alternatives → features and training → serving and scale → deployment and monitoring → decision record.
 
-## Default design sequence
+**Alternatives lens:** easy to implement (the baseline and control arm), more granular or accurate (fixes a named gap), production-balanced (often a cheap stage followed by a rich stage). These are perspectives, not a quota of three models.
 
-Scope -> requirements -> service decision -> metrics -> data and labels -> baseline -> alternatives -> features and training -> serving and scale -> deployment -> decision record.
+**For each alternative, record:** the problem solved, the expected benefit, the cost or risk, where it fits, the evidence needed, and a *measurable* switch condition.
 
-## Alternatives lens
+**Model output ≠ service action:** calibrated granular predictions → policy (weights, thresholds, caps) → action.
 
-- **Easy to implement:** credible baseline and fast validation.
-- **More granular or accurate:** complexity that solves a measured limitation.
-- **Production-balanced:** quality, latency, scale, reliability, cost, and maintainability together.
+**Rollout:** offline gate → shadow → canary → A/B test → ramp to 100%, with rollback at every step.
 
-These are perspectives, not a requirement to create exactly three models.
-
-## Decision rule
-
-For each alternative, record the problem solved, expected benefit, cost, best-fit scenario, evidence needed, and switching condition.
-
-## Interview sentence
-
-> I would begin with the smallest system that satisfies the core requirements, establish a measurable baseline, and add complexity only when a specific product, quality, latency, or scaling limitation justifies it.
+> "I'd start with the smallest system that satisfies the core requirements, establish a measurable baseline, and add complexity only when a specific product, quality, latency or scale limitation justifies it, stating in advance the result that would make me switch."

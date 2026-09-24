@@ -60,6 +60,16 @@ Add a component only when:
 3. production constraints require it.
 ```
 
+## Switch conditions must be measurable
+
+Not "if the richer model is better" but, for example: "adopt DCN if offline NE improves ≥ 0.5% relative, p99 latency stays under 20 ms, and a two-week A/B test wins on revenue without raising hide rate."
+
+## Rollout order
+
+```text
+offline gate → shadow → canary → A/B test → ramp to 100%   (rollback at every step)
+```
+
 ## Final interview sentence
 
 > Start with the smallest system that satisfies the core requirements, establish a measurable baseline, and add complexity only when a specific product, quality, latency, or scaling limitation justifies it.

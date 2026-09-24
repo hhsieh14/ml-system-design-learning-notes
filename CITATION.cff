@@ -6,7 +6,7 @@ authors:
   - family-names: "Hsieh"
     given-names: "Hsiang-Yu"
     alias: "Andy"
-version: 1.0.0
+version: 1.1.0
 date-released: 2026-07-27
 abstract: "A visual and alternatives-driven ML system design study handbook with original diagrams, trade-off analysis, and decision prompts."
 keywords:

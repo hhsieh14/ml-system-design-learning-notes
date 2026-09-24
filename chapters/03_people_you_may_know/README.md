@@ -1,14 +1,9 @@
-# Chapter 3 - People You May Know
+# Chapter 3: People You May Know
 
-Publication-ready temporal graph recommendation case-study package.
+Link prediction at 10⁹-user scale: bounded friend-of-friend candidates, graph features, cached serving with lazy refresh, and when a temporal GNN is worth it.
 
-## Files
+- [Read the chapter](chapter_03_people_you_may_know.md)
+- [PDF version](chapter_03_people_you_may_know.pdf)
+- [Decision summary](decision_summary.md): the design choices and the measured result that would change each one
 
-- `chapter_03_people_you_may_know.pdf` - designed reading version
-- `chapter_03_people_you_may_know.md` - GitHub version
-- `decision_summary.md` - concise design record
-- `diagrams/` - original visual assets
-
-## Primary reference
-
-This chapter began as personal study notes based largely on *Machine Learning System Design Interview* by Ali Aminian and Alex Xu. It uses original wording and original diagrams and is not a substitute for the book.
+Based on my study of *Machine Learning System Design Interview* (Aminian & Xu, 2023). The wording and diagrams are my own; see the [main README](../../README.md) for attribution.

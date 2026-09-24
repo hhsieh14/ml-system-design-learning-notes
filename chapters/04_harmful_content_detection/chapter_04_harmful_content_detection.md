@@ -1,1108 +1,272 @@
----
-title: "Harmful Content Detection"
-subtitle: "A Multimodal Moderation System-Design Case Study"
-author: "Hsiang-Yu Hsieh"
-subject: "Machine Learning System Design - Interactive Learning Case Study"
-keywords:
-  - harmful content detection
-  - multimodal machine learning
-  - content moderation
-  - multi-task learning
-  - weak supervision
----
+# Chapter 4: Harmful Content Detection
 
-*A multimodal moderation system-design case study*
+> Based on my study of *Machine Learning System Design Interview* (Aminian & Xu, 2023). The explanations, trade-off analysis and diagrams are my own. Notes marked **Beyond the book** are material I added.
 
-## About this chapter
+**The design in one paragraph.** A post (text, images, video, links, context) goes through a cascade. First, cheap matching against known violating media. Then a **multimodal, multi-task model**: modality encoders → early fusion → shared layers → one head per harm category (violence, nudity, hate, self-harm, …). The calibrated category scores feed a **policy layer** that combines degree and severity into an action: keep, demote, send to human review, or remove. It trains on large volumes of noisy user reports, is evaluated and calibrated on a smaller trusted human-labeled set, and goes to production shadow-first.
 
-> **Primary reference:** This chapter began as personal study notes based largely on *Machine Learning System Design Interview* by Ali Aminian and Alex Xu. The restructuring, clarifications, trade-off discussions, diagrams, and interpretations are the author's own.
+![Design map](diagrams/01_design_map.png)
 
-This chapter preserves the design process in the original notes while organizing it into an interview- and discussion-ready system-design case.
-
-The main focus is **post-level harmful-content detection and moderation**:
-
-```text
-Multimodal post
-        |
-        v
-Category-level harm scores
-        |
-        v
-Overall harmful score
-        |
-        v
-Keep / demote / review / remove
-```
-
-The chapter keeps the main alternatives from the notes open for comparison. It does not expand into unrelated modeling methods.
-
-Bad-actor detection is briefly mentioned as a separate system that aggregates behavior over time. User-facing explanation generation is also handled by a separate downstream service.
-
----
-
-## Visual chapter map
-
-![Harmful content detection design map](diagrams/01_design_map.png)
-
-![Multimodal post to moderation action](diagrams/02_product_flow.png)
-
+![From post to action](diagrams/02_product_flow.png)
 
 ## 1. Problem definition
 
-The service receives a post that may contain:
-
-- text;
-- images;
-- video;
-- links;
-- post context;
-- selected author and engagement features.
-
-The system predicts multiple harm categories, such as:
-
-- violence;
-- nudity;
-- hate;
-- self-harm;
-- other harmful categories.
-
-These category scores are combined into an overall harmful score used by a moderation policy.
+- **Input:** a newly created or edited post, with text, images, video, links, post context, and selected author and engagement features.
+- **Model output:** a calibrated probability per harm category.
+- **Service action:** keep / demote (limit distribution) / human review / remove (and possibly record a violation). Also structured **reason codes** for a separate service that writes the user-facing explanation.
 
 ```text
-Text + image + video + context
-                |
-                v
-       Harmful-content model
-                |
-                v
-[violence, nudity, hate, self-harm, ...]
-                |
-                v
-        Overall harmful score
-                |
-                v
-        Moderation decision
+post → [p_violence, p_nudity, p_hate, p_self-harm, …] → severity-aware policy → action + reason codes
 ```
 
-### Related but separate systems
+**Related but separate systems:**
 
-#### Bad-actor detection
-
-A separate system can aggregate posts, reports, violations, and behavior over time:
-
-```text
-Posts + reports + violations + behavior
-                    |
-                    v
-             Actor-level risk
-```
-
-This case does not develop the actor-level architecture in detail.
-
-#### Misinformation
-
-Misinformation can follow a similar system-design process, but its labeling and policy boundaries are more complex. It remains outside the detailed scope.
-
----
+- **Bad-actor detection** aggregates an account's posts, reports, violations and behavior over time into an actor-level risk score. It uses different features, labels and actions (e.g. account restrictions).
+- **Misinformation** follows the same design process, but its labels depend on fact-checking and changing context. Out of scope here.
 
 ## 2. Requirements
 
-### Functional requirements
+**Functional:** many languages; text, image and video, alone or combined; category scores and one action; reason codes.
 
-The system should:
+**Latency depends on severity:**
 
-- support multiple languages;
-- process text, images, video, and multimodal combinations;
-- output category-level harm scores;
-- produce an overall harmful score;
-- support moderation actions such as keep, demote, review, or remove;
-- provide structured reason codes for a separate explanation service.
+| Tier | Categories (example) | Timing |
+|---|---|---|
+| real-time | graphic violence, credible threats, child-safety violations, self-harm with intent | before or within seconds of publication |
+| near-real-time | nudity, hate speech | minutes; can be demoted while pending |
+| asynchronous | lower-severity policy violations | batch re-scoring, e.g. as comments and reports accumulate |
 
-### Latency requirements
-
-Latency depends on severity.
+This leads to a **cascade**:
 
 ```text
-Urgent / severe category
-        -> real-time prediction
-
-Lower-urgency category
-        -> asynchronous or batch prediction may be acceptable
+every post ──► known-media hash match ──► cheap per-modality classifiers
+                                             │  (clearly safe → keep)
+                                             ▼
+                               full multimodal multi-task model
+                                             │  (uncertain → human review)
+                                             ▼
+                                        policy action
 ```
 
-Violence is the main example in the notes of a category that may require immediate detection.
-
-### Out of scope
-
-- user-facing explanation generation;
-- detailed bad-actor architecture;
-- detailed misinformation architecture.
-
-> **Open design discussion - Latency**
->
-> **Which categories require real-time detection?**  
-> ______________________________________________
->
-> **Which categories may use asynchronous detection?**  
-> ______________________________________________
->
-> **What model-cost trade-off is acceptable?**  
-> ______________________________________________
-
----
+> [!NOTE]
+> **Beyond the book: hash matching first.** Much harmful media is re-uploaded. Perceptual hashes (e.g. PhotoDNA, or Meta's open-source PDQ for images and TMK+PDQF for video) match near-duplicates of already-confirmed violating content at almost no cost and very high precision. They're the right first stage. The ML model is for *new* content.
 
 ## 3. Labels and training data
 
-![Label strategy](diagrams/03_label_pipeline.png)
+![Label pipeline](diagrams/03_label_pipeline.png)
 
+Two label sources, with different roles:
 
+| Source | Scale | Quality | Use |
+|---|---|---|---|
+| user reports | millions | noisy: mass reporting, disagreements, wrong category | weakly supervised training |
+| trusted human labels (policy-trained reviewers) | thousands to tens of thousands | high | evaluation, calibration, threshold setting; limited fine-tuning |
 
-### Large-scale weak supervision
+**How I'd turn reports into labels:**
 
-User reports provide scalable but noisy labels.
+- a single report is weak evidence. Weight it by the reporter's historical accuracy;
+- several independent reports raise confidence, but deduplicate coordinated reporting;
+- if a moderator reviewed the report, use the moderator's decision as a strong label, including "not violating" as a strong negative;
+- unreported posts are *mostly* safe but not labeled negatives. Sample them into training with lower weight.
 
-Possible treatments from the clarification discussion include:
-
-- use reports directly;
-- weight them by confidence;
-- require agreement across reports;
-- combine reports with moderation or behavioral signals.
-
-A report is not automatically a perfect ground-truth label.
-
-### Trusted human-labeled data
-
-A smaller human-labeled dataset is used primarily for:
-
-- evaluation;
-- calibration;
-- threshold selection.
-
-It may also support limited fine-tuning when enough high-quality examples exist, provided that the trusted benchmark remains independent.
-
-```text
-Large-scale reports
-        |
-        v
-Weakly supervised training
-
-Human-labeled data
-        |
-        +--> evaluation
-        +--> calibration
-        +--> threshold selection
-        +--> optional limited fine-tuning
-```
-
-> **Open design discussion - Label strategy**
->
-> **How should a single report affect the label?**  
-> ______________________________________________
->
-> **Should multiple reports increase confidence?**  
-> ______________________________________________
->
-> **Which reports should be filtered?**  
-> ______________________________________________
->
-> **How much human-labeled data should be reserved for evaluation?**  
-> ______________________________________________
-
----
+**Keep an independent trusted holdout.** Never fine-tune on the evaluation set. I'd reserve about half of the human-labeled data, stratified by category and language, purely for evaluation and calibration.
 
 ## 4. Product metrics
 
-The notes contain several possible business metrics. Their exact definitions depend on the product objective.
+| Metric | Definition | Measures |
+|---|---|---|
+| **prevalence** (primary) | harmful impressions / total impressions, estimated by labeling a random sample of views | how much harm users actually see |
+| content prevalence | harmful posts remaining visible / total posts | volume of harm on the platform |
+| proactive rate | violating content removed before any user report / all violating content removed | how much the system finds on its own |
+| valid-appeal (reversal) rate | enforcement decisions reversed on appeal / decisions appealed | wrongful enforcement |
+| per-category and per-language breakdowns | each of the above, sliced | where the system is weak |
 
-### Content prevalence
-
-```text
-Harmful posts remaining visible
---------------------------------
-Total posts
-```
-
-This measures harmful content volume.
-
-### Exposure prevalence
-
-```text
-Harmful impressions
--------------------
-Total impressions
-```
-
-This measures user exposure to harmful content.
-
-### Valid appeal rate
-
-```text
-Reversed enforcement decisions
-------------------------------
-Appealed enforcement decisions
-```
-
-This measures the quality of moderation decisions among appealed cases.
-
-### Proactive detection rate
-
-```text
-Confirmed harmful content detected before reports
--------------------------------------------------
-All confirmed harmful content
-```
-
-This measures how much harmful content is found before users report it.
-
-### Category-level monitoring
-
-Reports and moderation outcomes should also be broken down by category to identify weak areas.
-
-> **Open design discussion - Primary business metric**
->
-> **Primary metric:**  
-> ______________________________________________
->
-> **Why this metric matches the product goal:**  
-> ______________________________________________
->
-> **Guardrail metrics:**  
-> ______________________________________________
->
-> **Category and severity breakdowns:**  
-> ______________________________________________
-
----
+**Primary metric: impression-weighted prevalence**, because a harmful post seen by a million people matters more than one seen by nobody. **Guardrails:** appeal reversal rate (over-enforcement), reviewer queue size and latency, creator retention.
 
 ## 5. Offline evaluation
 
-The notes retain:
+- **PR-AUC and recall at a fixed precision** per category. Harmful content is rare (often < 1%), and precision–recall shows the positive-class trade-off directly.
+- **ROC-AUC** is reported but not relied on. With millions of easy negatives, the false-positive *rate* stays tiny even when false positives outnumber true positives.
+- **Calibration** per category, since thresholds and severity weights assume real probabilities.
+- **Per-category thresholds.** A missed credible threat costs far more than a missed borderline insult, so the violence threshold for review is set lower. I'd set each threshold from the trusted set at a target precision for automatic removal (e.g. ≥ 95%) and a target recall for review.
 
-- precision;
-- recall;
-- PR-AUC;
-- ROC-AUC.
+## 6. Early vs late fusion
 
-### Why PR-AUC matters
+![Fusion comparison](diagrams/04_fusion_comparison.png)
 
-Harmful content is rare. PR-AUC focuses more directly on positive-class performance and the trade-off between detecting harmful content and producing false positives.
+| | Late fusion | Early fusion |
+|---|---|---|
+| structure | separate text / image / video classifiers, scores combined at the end | modality embeddings concatenated (or cross-attended) and fed to one shared model |
+| strengths | modular, debuggable, each modality deployable on its own, missing modalities easy | learns **cross-modal meaning** |
+| weaknesses | misses meaning that only exists in combination | harder to train; missing modalities need care; more compute |
 
-### ROC-AUC caution
+A harmless photo plus a harmless caption can be hateful together (the classic "hateful meme" problem), and late fusion can't see that. So the **preferred design is early fusion, with late fusion as the baseline**. Adopt early fusion if it improves PR-AUC on a trusted set of multimodal posts (not just overall) by a meaningful margin.
 
-ROC-AUC can appear strong when true negatives are extremely numerous. It remains useful, but should not be the only metric.
+## 7. Classifier structure
 
-### Threshold selection
+![Model alternatives](diagrams/05_model_alternatives.png)
 
-Thresholds may differ by harmful category because the consequences of missing violence may differ from the consequences of incorrectly flagging another category.
+| Option | Description | Pro | Con |
+|---|---|---|---|
+| 1. single binary | harmful vs safe | simplest | no category, so no category thresholds or reason codes |
+| 2. one model per category | separate violence, nudity, … models | specialized | N models to train, serve and keep consistent |
+| 3. shared multi-label | one network, one sigmoid output per category | one model, independent scores | every category shares the same final layer |
+| **4. shared-bottom multi-task** | shared layers + a small head per category | shared features *and* per-category transformations, thresholds and loss weights | more tuning; task gradients can conflict |
 
-> **Open design discussion - Offline evaluation**
->
-> **Primary offline metric:**  
-> ______________________________________________
->
-> **Category-specific thresholds:**  
-> ______________________________________________
->
-> **Which false positive is most costly?**  
-> ______________________________________________
->
-> **Which false negative is most costly?**  
-> ______________________________________________
+**Choice:** option 4, with option 3 as the baseline. Give a category its own deeper head only if it underperforms when it shares, e.g. self-harm, whose language differs a lot from violence.
 
----
+## 8. Modality encoders
 
-## 6. Early fusion versus late fusion
+Pretrained encoders, fine-tuned or frozen with trainable projection layers:
 
-![Multimodal fusion comparison](diagrams/04_fusion_comparison.png)
+| Modality | Options | Why |
+|---|---|---|
+| text | **multilingual** transformer: XLM-R, LaBSE, or a distilled multilingual model for latency | one model across ~100 languages; DistilBERT and Sentence-BERT are English-centric unless you use their multilingual variants |
+| image | CLIP ViT image encoder; a ResNet/ViT **pretrained with** a self-supervised method like SimCLR | CLIP's image–text alignment helps text-in-image and meme understanding |
+| video | sample frames → image encoder → temporal pooling or attention; or a video transformer (VideoMAE, X-CLIP), possibly pretrained with a self-supervised method like VideoMoCo | cost grows with length, so sample frames and add audio transcripts as text |
 
-
-
-The notes compare two multimodal architectures.
-
-### Late fusion
-
-```text
-Text  -> Text model  --\
-Image -> Image model ---+-> Fusion -> Harm scores
-Video -> Video model --/
-```
-
-**Advantages**
-
-- modular;
-- easier to debug;
-- each modality can use a specialized model;
-- missing modalities may be easier to handle.
-
-**Disadvantages**
-
-- may combine information too late;
-- may miss cross-modal meaning;
-- requires maintaining multiple models.
-
-### Early fusion
-
-```text
-Text + image + video representations
-                |
-                v
-       Shared multimodal model
-                |
-                v
-        Category harm scores
-```
-
-**Advantages**
-
-- learns cross-modal relationships;
-- supports one shared model;
-- can capture meaning that depends on multiple modalities.
-
-**Disadvantages**
-
-- harder to train;
-- missing modalities need careful representation;
-- higher compute and engineering complexity.
-
-### Preferred proposal
-
-Early fusion is the preferred design in the notes. Late fusion remains the comparison baseline.
-
-> **Open design discussion - Fusion**
->
-> **Measured improvement required to justify early fusion:**  
-> ______________________________________________
->
-> **Missing-modality behavior:**  
-> ______________________________________________
->
-> **Latency and compute limit:**  
-> ______________________________________________
->
-> **Chosen fusion design:**  
-> ______________________________________________
-
----
-
-## 7. Architecture alternatives
-
-![Classifier alternatives](diagrams/05_model_alternatives.png)
-
-
-
-The notes compare four classifier designs.
-
-### Option 1 - Single binary classifier
-
-Predict:
-
-```text
-harmful / safe
-```
-
-**Advantage:** simplest design.  
-**Limitation:** does not explain which harmful category caused the decision.
-
-### Option 2 - One binary classifier per category
-
-```text
-Violence model
-Nudity model
-Hate model
-Self-harm model
-```
-
-**Advantage:** category-specific models.  
-**Limitation:** multiple models increase training and serving cost.
-
-### Option 3 - Shared multi-label classifier
-
-```text
-Shared representation
-        |
-        v
-[violence, nudity, hate, self-harm, ...]
-```
-
-**Advantage:** one model with independent category outputs.  
-**Limitation:** all categories depend heavily on the same final transformation.
-
-### Option 4 - Shared-bottom multi-task classifier
-
-```text
-Shared multimodal layers
-        /      |      \
-       v       v       v
- Violence   Nudity   Hate / other
-    head      head       heads
-```
-
-**Advantages**
-
-- shared representation reduces duplication;
-- category heads learn task-specific transformations;
-- each category may use its own threshold and loss weight.
-
-**Disadvantages**
-
-- more complex than the shared multi-label baseline;
-- task gradients may be imbalanced;
-- head and loss-weight design require tuning.
-
-### Preferred proposal
-
-The shared-bottom multi-task model is the preferred design. The shared multi-label model remains the main simpler baseline.
-
-> **Open design discussion - Model architecture**
->
-> **Expected gain over the multi-label baseline:**  
-> ______________________________________________
->
-> **Which categories require more specialized heads?**  
-> ______________________________________________
->
-> **How large should each head be?**  
-> ______________________________________________
->
-> **What result would justify keeping the simpler baseline?**  
-> ______________________________________________
-
----
-
-## 8. Example modality encoders
-
-The notes use specific examples to show the possible implementation level.
-
-### Text
-
-- DistilBERT;
-- Sentence-BERT;
-- multilingual sentence embeddings.
-
-### Image
-
-- CLIP visual encoder;
-- SimCLR.
-
-### Video
-
-- VideoMoCo.
-
-These are illustrative examples, not fixed requirements.
-
-```text
-Text encoder   -> text representation
-Image encoder  -> image representation
-Video encoder  -> video representation
-                     |
-                     v
-                Early fusion
-```
-
-The encoder choice depends on language coverage, accuracy, latency, sequence length, and infrastructure.
-
----
+(SimCLR and VideoMoCo are *training methods*, not architectures: they produce encoders.)
 
 ## 9. Missing modalities
 
-A post may contain:
+Posts can be text-only, image-only, text + video, and so on. The model must tell "no image" apart from "a harmless image".
 
-- text only;
-- image only;
-- text and image;
-- text and video;
-- all modalities.
+| Method | Pro | Con |
+|---|---|---|
+| zero vector | trivial | can look like a real low-information embedding |
+| **learned "missing" embedding per modality + a presence flag** | the model knows what's absent | one extra parameter vector per modality |
+| modality-specific handling (e.g. empty-string text encoding) | natural for some encoders | inconsistent across modalities |
 
-The notes keep several alternatives open.
-
-### Zero representation
-
-Use a zero vector for a missing modality.
-
-**Pros:** simple.  
-**Cons:** may be confused with a valid low-information representation.
-
-### Special vector or token
-
-Use an explicit missing-modality representation.
-
-**Pros:** makes missingness visible to the model.  
-**Cons:** adds a learned or engineered representation.
-
-### Encoder-specific representation
-
-Use another explicit method appropriate to the modality encoder.
-
-Different modalities may use different approaches.
-
-> **Open design discussion - Missing modalities**
->
-> **Text missing representation:**  
-> ______________________________________________
->
-> **Image missing representation:**  
-> ______________________________________________
->
-> **Video missing representation:**  
-> ______________________________________________
->
-> **How the model distinguishes missing from neutral content:**  
-> ______________________________________________
-
----
+**Choice:** a learned missing embedding plus a presence flag for each modality, trained with **modality dropout** (randomly hiding a present modality during training) so the model stays robust when one is missing.
 
 ## 10. Additional features
 
-### Engagement
+**Engagement** (impressions, likes, shares, reports so far): useful for re-scoring, but zero at upload time. Only use values available at the moment of prediction.
 
-Possible features include:
+**Comments:** they arrive after posting, so they don't help the first decision. I'd use them for **re-scoring**: mean-pool the embeddings of up to N recent comments (the simple default), or use attention pooling or max-risk pooling if a few alarming comments matter more than the average.
 
-- number of impressions;
-- likes;
-- comments;
-- shares;
-- reports.
+**Author history** (prior violations, report rate, account age, follower counts): strongly predictive, but it risks penalizing people for their past rather than this post, and it can encode bias. My choice: keep the harm score **content-only**, and use author history for **routing and prioritization** (e.g. faster review for repeat violators) and in the separate actor-level system. Only history before the current post may be used.
 
-Only information available at prediction time should be used.
+**Context:** posting time, device, country, surface (public vs group).
 
-### Comments
+## 11. From category scores to an action
 
-The simple default is to average embeddings from a bounded number of available comments.
+Several categories can be present at different levels. Options for combining them:
 
-Minimal alternatives for discussion:
+| Method | Pro | Con |
+|---|---|---|
+| weighted sum $\sum_cs_c\,p_c$ | interpretable | weights need policy input |
+| max category | sensitive to one severe category | ignores several moderate ones |
+| learned aggregator | captures interactions | opaque; needs overall labels |
+| **hybrid** | policy control + flexibility | more to maintain |
 
-- attention-weighted pooling;
-- top-k or max-risk pooling;
-- thread-aware aggregation;
-- exclude comments from initial moderation and use them only for later rescoring.
-
-Comments may not exist when the post is first published, so they may be more useful for later rescoring.
-
-> **Open design discussion - Comment use**
->
-> **Initial moderation:**  
-> ______________________________________________
->
-> **Later rescoring:**  
-> ______________________________________________
->
-> **Default aggregation:**  
-> ______________________________________________
->
-> **When a more complex method is justified:**  
-> ______________________________________________
-
-### Author features
-
-The notes include:
-
-- prior reports or violations;
-- profanity rate;
-- follower and following counts;
-- account information.
-
-Only history available before the current post may be used.
-
-Open choices:
-
-- include author history in the harmful score;
-- use it only for confidence or review routing;
-- exclude it so the decision depends only on content.
-
-The main trade-off is predictive value versus bias against previously flagged users.
-
-> **Open design discussion - Author history**
->
-> **Use in harmful score, review routing, or neither?**  
-> ______________________________________________
->
-> **Temporal leakage guardrail:**  
-> ______________________________________________
->
-> **Bias concern:**  
-> ______________________________________________
-
-### Context
-
-Possible context features include:
-
-- posting time;
-- device;
-- country or location;
-- selected categorical indicators.
-
----
-
-## 11. Category scores and overall harmful score
-
-The internal model is multi-label. The service produces an overall harmful score for policy decisions.
-
-```text
-Violence score
-Nudity score
-Hate score
-Self-harm score
-Other category scores
-        |
-        v
-Overall harmful score
-```
-
-Several categories may be present at different levels.
-
-### Option 1 - Weighted combination
-
-Severe categories can contribute more strongly.
-
-**Pros:** clear and interpretable.  
-**Cons:** weights require policy and validation decisions.
-
-### Option 2 - Highest-risk category
-
-Use the strongest category score.
-
-**Pros:** simple and sensitive to one severe category.  
-**Cons:** may ignore combinations of moderate categories.
-
-### Option 3 - Learned aggregation
-
-Learn the overall score from granular scores and selected context.
-
-**Pros:** can capture category interactions.  
-**Cons:** less transparent and requires suitable labels.
-
-### Option 4 - Hybrid
-
-Combine learned aggregation with explicit rules for severe categories.
-
-**Pros:** balances flexibility and policy control.  
-**Cons:** adds maintenance complexity.
-
-> **Open design discussion - Harmful-score aggregation**
->
-> **Chosen method:**  
-> ______________________________________________
->
-> **Which categories receive higher influence?**  
-> ______________________________________________
->
-> **Can multiple moderate scores trigger action?**  
-> ______________________________________________
->
-> **Which severe category can override the aggregate score?**  
-> ______________________________________________
-
----
+**My choice (hybrid):** per-category calibrated scores are checked against per-category thresholds **first**, so severe categories can trigger removal on their own. Otherwise, a severity-weighted risk $R=\max_c(s_c\,p_c)$, with severities $s_c$ set by policy, plus a small bonus when several categories are moderately high, drives the demote / review decision.
 
 ## 12. Training the multi-task model
 
 ![Training flow](diagrams/07_training_flow.png)
 
+Each head has a binary cross-entropy loss, and the shared layers receive the sum. Two different balancing problems are easy to confuse:
 
+- **Balancing tasks:** some category losses are larger or noisier and dominate the shared gradients. **GradNorm** (Chen et al., 2018) learns loss weights that equalize per-task gradient norms. Uncertainty weighting (Kendall et al., 2018) is an alternative.
+- **Balancing modalities:** in multimodal training, one modality (often text) is learned fast and overfits while others are under-trained. **Gradient Blending** (Wang, Tran & Feiszli, 2020) weights each modality's loss by its estimated overfitting-to-generalization ratio.
 
-Each category head has its own classification loss.
-
-```text
-Shared multimodal representation
-        /       |       \
-       v        v        v
-Violence loss  Nudity loss  Hate / other losses
-        \       |       /
-         Gradient blending
-                |
-                v
-        Update shared layers
-```
-
-### Gradient blending
-
-Different tasks or modalities may produce gradients with different magnitudes.
-
-The notes propose assigning or learning weights before combining them.
-
-**Pros**
-
-- reduces domination by one task or modality;
-- preserves a shared model;
-- allows important categories to receive more influence.
-
-**Cons**
-
-- weights require tuning or learning;
-- over-balancing can weaken important signals;
-- training and debugging become more complex.
-
-> **Open design discussion - Gradient blending**
->
-> **Primary imbalance: task, modality, or both?**  
-> ______________________________________________
->
-> **Fixed or learned weights?**  
-> ______________________________________________
->
-> **Which categories need more influence?**  
-> ______________________________________________
->
-> **Evidence that blending helps:**  
-> ______________________________________________
-
----
+I'd first measure which imbalance exists (per-task gradient norms, per-modality validation curves), then apply the matching fix. Evidence that it helped: rare-category PR-AUC improves without a drop in the frequent categories.
 
 ## 13. Class imbalance
 
-Harmful content is rare, and some harmful categories are much rarer than others.
+Harm is rare overall, and some categories are far rarer than others.
 
-The notes retain two methods.
+**Focal loss** (Lin et al., 2017) down-weights easy examples:
 
-### Focal loss
+$$\mathrm{FL}(p_t)=-\alpha_t(1-p_t)^{\gamma}\log p_t,\qquad \gamma\approx2 .$$
 
-Reduces the contribution of easy examples and emphasizes difficult ones.
+An easy negative with $p_t=0.99$ has its loss scaled by $0.01^2=10^{-4}$. Risk: noisy reports look like "hard" examples and get *more* weight.
 
-**Advantages**
+**Class-balanced loss** (Cui et al., 2019) weights class $c$ by the inverse of its *effective number* of samples, $E_{n_c}=(1-\beta^{n_c})/(1-\beta)$. With $\beta=0.9999$, a category with 100 examples gets about 100× the weight of one with 100,000, instead of the 1,000× that plain inverse frequency would give. That tames overweighting of noisy rare classes.
 
-- focuses learning on difficult harmful examples;
-- reduces domination by easy safe examples.
+They address different things (difficulty vs rarity) and can be multiplied, but add each only when its failure mode is measured: easy negatives dominating the loss, or a rare category's recall collapsing.
 
-**Risks**
+## 14. Long inputs and attention cost
 
-- difficult examples may include noisy reports;
-- the focusing parameter requires tuning.
+Standard self-attention costs $O(n^2)$ in sequence length. Long posts, transcripts and many video frames get expensive. Options, in order:
 
-### Class-balanced loss
+1. **reduce $n$:** truncate, sample frames, pool patches (often enough);
+2. **efficient attention:** linear or kernelized attention, low-rank (Linformer), or sparse/local windows. Each is cheaper and may lose some long-range interaction quality.
 
-Adjusts class influence using the number of examples.
-
-**Advantages**
-
-- directly addresses category-frequency imbalance;
-- gives rare categories more influence.
-
-**Risks**
-
-- noisy rare categories may receive excessive weight;
-- frequency alone does not measure difficulty.
-
-### Combination
-
-The two may be combined when there is a clear reason:
-
-```text
-Class-balanced weight
-        x
-Focal adjustment
-        x
-Classification loss
-```
-
-Class-balanced weighting addresses rarity. Focal adjustment addresses example difficulty.
-
-> **Open design discussion - Imbalance**
->
-> **Use focal loss, class-balanced loss, or both?**  
-> ______________________________________________
->
-> **Evidence for frequency imbalance:**  
-> ______________________________________________
->
-> **Evidence for easy-example dominance:**  
-> ______________________________________________
->
-> **How noisy reports affect the decision:**  
-> ______________________________________________
-
----
-
-## 14. Attention scaling
-
-Standard attention has quadratic growth with sequence length:
-
-```text
-Standard attention: O(n²)
-```
-
-The notes suggest linear or approximate attention for long multimodal inputs:
-
-```text
-Long text / video / combined sequence
-                |
-                v
-       Linear attention option
-```
-
-### Standard attention
-
-**Pros:** full token-to-token interaction and simpler modeling.  
-**Cons:** expensive for long sequences.
-
-### Linear or approximate attention
-
-**Pros:** lower compute and memory for long inputs.  
-**Cons:** may lose some interaction quality.
-
-This is an optional scaling technique, not a requirement for every input.
-
-> **Open design discussion - Attention**
->
-> **Sequence length where standard attention becomes a problem:**  
-> ______________________________________________
->
-> **Modalities causing the bottleneck:**  
-> ______________________________________________
->
-> **Measured quality loss allowed:**  
-> ______________________________________________
-
----
+Switch when p99 latency or GPU memory is exceeded at the real length distribution, and accept the change only if category PR-AUC drops by less than a set tolerance.
 
 ## 15. Serving and moderation policy
 
-The serving path uses category scores, overall harmful score, confidence, and category severity.
-
-```text
-Post features
-        |
-        v
-Multi-task harmful-content model
-        |
-        v
-Category scores + harmful score + confidence
-        |
-        +--> low risk       -> keep
-        +--> moderate risk  -> demote or limit distribution
-        +--> uncertain      -> manual review
-        +--> high risk      -> remove and possibly record violation
-```
-
-Thresholds may differ by category.
-
-Examples:
-
-- high violence risk may require a lower removal threshold;
-- uncertain borderline content may require manual review;
-- moderate risk may justify demotion before removal.
-
-The user-facing explanation is produced by another service. This model may pass structured category scores or reason codes downstream.
-
-> **Open design discussion - Action routing**
->
-> **Keep threshold:**  
-> ______________________________________________
->
-> **Demotion range:**  
-> ______________________________________________
->
-> **Manual-review condition:**  
-> ______________________________________________
->
-> **Removal threshold:**  
-> ______________________________________________
->
-> **Category-specific overrides:**  
-> ______________________________________________
-
----
-
-## 16. Shadow deployment
-
 ![Serving and shadow deployment](diagrams/08_serving_shadow.png)
 
+A starting policy (thresholds on calibrated scores, set per category from the trusted set):
 
+| Condition | Action |
+|---|---|
+| any category ≥ its **removal** threshold (precision ≥ 95%) | remove; record a violation; send reason codes |
+| severity-weighted risk in the **review** band, or model uncertainty high | human review queue, prioritized by severity × reach |
+| risk in the **demote** band | limit distribution while pending |
+| otherwise | keep |
 
-A/B testing can be risky when model errors directly affect harmful-content exposure or incorrect removal.
+Severe categories get lower review thresholds, and some (credible threats) always go to review. Queue capacity is part of the design: if the review band sends more items than reviewers can handle, the threshold has to move.
 
-The preferred first production-validation step is shadow deployment.
+## 16. Deployment: shadow first
+
+A/B testing a moderation model means knowingly exposing some users to more harm, or wrongly removing their posts. So the first production step is **shadow deployment**:
 
 ```text
-Production traffic
-        |
-        v
-New model runs silently
-        |
-        v
-Scores and proposed actions are logged
-        |
-        v
-Compare with current system and human review
-        |
-        v
-Limited enforcement after validation
+production traffic → new model scores silently → proposed actions logged
+                  → compared with the current system and with human review of disagreements
+                  → limited enforcement (one category, one region) → full rollout
 ```
 
-Shadow deployment can validate:
+Shadow can validate latency, reliability, score distributions, agreement with production, the disagreement cases and per-category precision on reviewed samples. It **can't** measure how users respond to real enforcement. That comes with limited enforcement, and A/B tests are reserved for lower-risk changes (e.g. demotion thresholds).
 
-- latency;
-- reliability;
-- score distribution;
-- agreement with the current system;
-- disagreement cases;
-- human-review quality;
-- category-level performance.
-
-It cannot fully measure user behavior after real moderation actions because the model is not yet enforcing decisions.
-
-A/B testing may be considered later for lower-risk changes.
-
-> **Open design discussion - Deployment**
->
-> **Shadow metrics:**  
-> ______________________________________________
->
-> **Required agreement with human review:**  
-> ______________________________________________
->
-> **Disagreement cases to inspect:**  
-> ______________________________________________
->
-> **Exit criteria for limited enforcement:**  
-> ______________________________________________
-
----
+**Exit criteria I'd set:** p99 latency within budget for two weeks; reviewed precision at the removal threshold ≥ production in every category; no category or language with recall below production; disagreement cases reviewed and explained.
 
 ## 17. End-to-end design
 
 ![Reference architecture](diagrams/06_reference_architecture.png)
 
-
-
 ```text
-Post text / image / video / context
-                    |
-                    v
-        Modality-specific encoders
-                    |
-                    v
-             Early fusion
-                    |
-                    v
-       Shared multimodal layers
-       /        |        |       \
-      v         v        v        v
- Violence   Nudity     Hate    Self-harm
-   score      score     score      score
-       \        |        |       /
-        \       |        |      /
-         Overall harmful score
-                    |
-                    v
-       Confidence and policy layer
-                    |
-      +-------------+-------------+
-      |             |             |
-     keep        review        remove
-                    |
-                  demote
+post → hash match ─(match)→ remove
+     → text / image / video encoders (+ missing embeddings) → early fusion → shared layers
+     → category heads → calibrated scores → severity-aware policy
+     → keep / demote / review / remove  (+ reason codes → explanation service)
+account history over time → actor-level risk (separate system)
 ```
 
-### Related actor-level system
+## 18. My decisions
 
-```text
-Posts + reports + violations + behavior over time
-                        |
-                        v
-               Actor-level risk score
-```
-
-The actor-level system is separate from the post-removal service.
-
----
-
-## 18. Decision worksheet
-
-### Scope
-
-**Main harmful categories:**  
-______________________________________________
-
-**Real-time categories:**  
-______________________________________________
-
-### Labels
-
-**Treatment of user reports:**  
-______________________________________________
-
-**Use of human labels:**  
-______________________________________________
-
-### Metrics
-
-**Primary product metric:**  
-______________________________________________
-
-**Primary offline metric:**  
-______________________________________________
-
-### Fusion
-
-**Early or late fusion:**  
-______________________________________________
-
-**Reason:**  
-______________________________________________
-
-### Architecture
-
-**Multi-label baseline or multi-task model:**  
-______________________________________________
-
-**Expected improvement required:**  
-______________________________________________
-
-### Harmful score
-
-**Aggregation method:**  
-______________________________________________
-
-**Category overrides:**  
-______________________________________________
-
-### Training
-
-**Gradient-blending strategy:**  
-______________________________________________
-
-**Focal, class-balanced, or both:**  
-______________________________________________
-
-### Features
-
-**Missing-modality method:**  
-______________________________________________
-
-**Comment use:**  
-______________________________________________
-
-**Author-history use:**  
-______________________________________________
-
-### Serving
-
-**Keep / demote / review / remove policy:**  
-______________________________________________
-
-### Deployment
-
-**Shadow-deployment exit criteria:**  
-______________________________________________
-
----
+| Decision | Choice | Would change if… |
+|---|---|---|
+| main categories | violence, nudity, hate, self-harm, plus others by policy | policy adds or merges categories |
+| real-time categories | violence, credible threats, child safety, self-harm with intent | latency cost is prohibitive → a cheaper real-time model for these only |
+| user reports | reliability-weighted weak labels; moderator decisions as strong labels | a noise-robust loss beats weighting on the trusted set |
+| human labels | half held out for evaluation/calibration, half for fine-tuning | – |
+| primary product metric | impression-weighted prevalence | – |
+| primary offline metric | per-category PR-AUC and recall at the removal-precision target | – |
+| fusion | early fusion; late fusion as baseline | early fusion gains < ~1 pt PR-AUC on multimodal posts |
+| architecture | shared-bottom multi-task; multi-label baseline | the baseline is within noise on every category |
+| harm score | per-category thresholds first, then severity-weighted max | a learned aggregator beats it on overall labels and passes policy review |
+| task / modality balancing | measure first; GradNorm for tasks, Gradient Blending for modalities | no measurable imbalance → plain summed loss |
+| imbalance | class-balanced weights; add focal loss if easy negatives dominate | – |
+| missing modality | learned missing embedding + presence flag + modality dropout | – |
+| comments | re-scoring only, mean-pooled | a few alarming comments are missed → max-risk pooling |
+| author history | routing and priority only, not in the harm score | policy decides author history is a legitimate input |
+| rollout | shadow → limited enforcement → full | – |
 
 ## 19. Main lessons
 
-1. The service can be multi-label internally while supporting a single overall harmful score.
-2. Category scores support analysis, severity weighting, thresholding, and downstream reason codes.
-3. User reports provide scale but should be treated as noisy supervision.
-4. Human labels are most valuable as a trusted benchmark for evaluation and calibration.
-5. Early fusion is useful when harmful meaning depends on cross-modal interactions.
-6. A shared-bottom multi-task model balances feature sharing and category-specific learning.
-7. Gradient blending helps prevent one task or modality from dominating shared layers.
-8. Focal loss and class-balanced loss address different aspects of imbalance and may be combined for a demonstrated reason.
-9. Missing modalities must be represented explicitly.
-10. Comments and author history should be used carefully because of timing, leakage, and bias.
-11. The overall harmful score should reflect both category degree and category severity.
-12. Moderation is a policy spectrum: keep, demote, review, or remove.
-13. Linear attention is an optional scaling method for long sequences.
-14. Shadow deployment is a safer first production step than immediate enforcement.
-15. Bad-actor detection is a related but separate actor-level system.
+1. Multi-label inside, one action outside. Category scores enable thresholds, severity and reason codes.
+2. Reports give scale; human labels give truth. Keep a trusted, independent evaluation set.
+3. Early fusion is justified when meaning lives in the *combination* of modalities.
+4. Balance tasks and modalities only after measuring which one is out of balance.
+5. Focal loss addresses difficulty, class-balanced loss addresses rarity. They're different tools.
+6. Represent missing modalities explicitly and train for their absence.
+7. Moderation is a spectrum (keep, demote, review, remove), and reviewer capacity is part of the system.
+8. Go shadow-first. Enforcement mistakes are costly in both directions.
 
 ---
+
+[← Chapter 3: People You May Know](../03_people_you_may_know/chapter_03_people_you_may_know.md) · [Back to the handbook](../../README.md)

@@ -37,4 +37,8 @@ These notes are based on my study of:
 
 > Ali Aminian and Alex Xu, *Machine Learning System Design Interview*. ByteByteGo, 2023. ISBN 978-1-7360491-2-9.
 
-The case topics and many of the alternatives come from the book. The framework, explanations, calculations, added material (marked **Beyond the book**, with [references](REFERENCES.md)), diagrams and decision records are my own. This project is unofficial, is not affiliated with the authors or publisher, and is not a substitute for the book. See [DISCLAIMER.md](DISCLAIMER.md) and [LICENSE.md](LICENSE.md).
+The case topics and many of the alternatives come from the book. The framework, explanations, calculations, added material (marked **Beyond the book**, with [references](REFERENCES.md)), diagrams and decision records are my own. This project is unofficial, is not affiliated with the authors or publisher, and is not a substitute for the book. See [DISCLAIMER.md](DISCLAIMER.md).
+
+## License
+
+My original content here is licensed under [CC BY-NC 4.0](LICENSE): you're welcome to share and adapt it for non-commercial use with credit. The book itself is not covered. See the [license notice](LICENSE_NOTICE.md) for scope and suggested attribution.

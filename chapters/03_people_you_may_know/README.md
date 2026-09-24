@@ -7,7 +7,6 @@ Publication-ready temporal graph recommendation case-study package.
 - `chapter_03_people_you_may_know.pdf` - designed reading version
 - `chapter_03_people_you_may_know.md` - GitHub version
 - `decision_summary.md` - concise design record
-- `linkedin_post.md` - publication draft
 - `diagrams/` - original visual assets
 
 ## Primary reference

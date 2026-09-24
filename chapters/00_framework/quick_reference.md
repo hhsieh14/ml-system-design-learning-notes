@@ -8,7 +8,7 @@
 5. Data and labels
 6. Easy baseline
 7. Richer alternative
-8. Industrial preference
+8. Production-balanced
 9. Features
 10. Training
 11. Serving
@@ -38,7 +38,7 @@ Use when the baseline misses:
 - multimodal interactions;
 - difficult feature interactions.
 
-### Industrial preference
+### Production-balanced
 
 Use when balancing:
 

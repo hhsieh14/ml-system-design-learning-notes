@@ -41,8 +41,6 @@ This repository is unofficial, is not affiliated with the authors or publisher, 
 ```text
 chapters/   Individual chapter PDFs, Markdown, decision summaries, and diagrams
 handbook/   Combined public PDF
-linkedin/   Draft posts for sharing the project and chapters
-docs/       Attribution, publication, visual, and QA notes
 ```
 
 ## Public-use note

@@ -7,7 +7,6 @@ Publication-ready case-study package.
 - `chapter_02_ad_click_prediction.pdf` - designed reading version
 - `chapter_02_ad_click_prediction.md` - GitHub version
 - `decision_summary.md` - concise design record
-- `linkedin_post.md` - publication draft
 - `diagrams/` - original visual assets
 
 ## Primary reference

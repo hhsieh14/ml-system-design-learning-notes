@@ -9,7 +9,6 @@ A publication-ready visual chapter for the Machine Learning System Design Study 
 - `decision_summary.md`
 - `reusable_case_template.md`
 - `quick_reference.md`
-- `linkedin_post.md`
 - `diagrams/`
 
 ## Primary reference

@@ -1106,11 +1106,3 @@ ______________________________________________
 15. Bad-actor detection is a related but separate actor-level system.
 
 ---
-
-```{=openxml}
-<w:p><w:r><w:br w:type="page"/></w:r></w:p>
-```
-
-# Appendix A - Original handwritten notes
-
-The original notes are preserved as the authoritative visual source.

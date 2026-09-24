@@ -1,30 +1,24 @@
-# Chapter 1 Decision Summary
+# Chapter 1 Decision Summary: Feed Ranking
 
 ## Starting architecture
 
-Use a hybrid retrieval-and-ranking system:
+1. Precompute post embeddings and ANN indexes (HNSW or IVF-PQ; PQ cuts 1B × 128-d from ~512 GB to ~16 GB).
+2. Retrieve candidates in parallel from two-tower ANN, the social graph and fresh/trending sources, each with a budget.
+3. Merge and deduplicate by post ID, keeping which sources found each post as a feature.
+4. Hydrate point-in-time user, post, relationship, history and context features.
+5. Score with a shared-bottom multi-task DNN: like, comment, share, dwell ≥ T, hide, block.
+6. Calibrate each head, then rank by utility $\sum_iw_i\hat P_i$ (negative weights for hide/block).
+7. Roll out: offline gate → shadow → canary → A/B (5% / 95%, ~2 weeks) → ramp.
 
-1. precompute reusable content representations and searchable indexes;
-2. retrieve candidates from ANN/two-tower, social-graph, and other sources;
-3. merge and deduplicate content IDs while preserving retrieval-source signals;
-4. hydrate user, content, relationship, history, and context features;
-5. apply a shared-bottom multi-task DNN;
-6. combine selected behavior probabilities into the serving score;
-7. validate through offline gates, a 5% treatment A/B test, and staged canary rollout.
+## Switch conditions
 
-## Main trade-offs
+| Area | Switch when |
+|---|---|
+| shared-bottom → MMoE | a head loses > 1% relative PR-AUC when trained jointly |
+| multi-source → single-source retrieval | one source reaches ≥ 95% of multi-source recall@K at lower latency |
+| serving weights | an A/B test on weight vectors finds a better primary-metric vs hide-rate trade-off |
+| daily → weekly retraining | calibration stays within tolerance for several weeks |
 
-- More granular heads improve analysis and utility construction but add training and serving complexity.
-- Two-tower retrieval scales well but models fewer pairwise interactions than the final ranker.
-- Multi-source retrieval improves coverage but requires merge, deduplication, feature hydration, and source budgeting.
-- Continual learning improves freshness but can create catastrophic forgetting or time-distribution distortion.
+## Still open (tuned empirically)
 
-## Open decisions
-
-- task-loss weights;
-- serving utility weights;
-- dwell and attribution thresholds;
-- candidate-source budgets;
-- index type and refresh cadence;
-- offline and online approval gates;
-- retraining triggers.
+Task-loss weights, dwell threshold T and label windows, source budgets, index refresh cadence, drift thresholds.

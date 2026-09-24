@@ -8,7 +8,7 @@
 5. Data and labels
 6. Easy baseline
 7. Richer alternative
-8. Industrial preference
+8. Production-balanced
 9. Features
 10. Training
 11. Serving
@@ -38,7 +38,7 @@ Use when the baseline misses:
 - multimodal interactions;
 - difficult feature interactions.
 
-### Industrial preference
+### Production-balanced
 
 Use when balancing:
 
@@ -58,6 +58,16 @@ Add a component only when:
 1. a requirement needs it;
 2. a measured limitation justifies it; or
 3. production constraints require it.
+```
+
+## Switch conditions must be measurable
+
+Not "if the richer model is better" but, for example: "adopt DCN if offline NE improves ≥ 0.5% relative, p99 latency stays under 20 ms, and a two-week A/B test wins on revenue without raising hide rate."
+
+## Rollout order
+
+```text
+offline gate → shadow → canary → A/B test → ramp to 100%   (rollback at every step)
 ```
 
 ## Final interview sentence
